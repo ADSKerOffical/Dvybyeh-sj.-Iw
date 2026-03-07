@@ -28,11 +28,30 @@ local Window = BudgieHub:CreateWindow({
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
-  for i, v in next, getgc(true) do
+-- Adonis Bypass
+for i, v in next, getgc(true) do
    if typeof(v) == "table" and rawget(v, "Detected") and typeof(rawget(v, "Detected")) == "function" then
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Adonis%20Bypass"))()
-    end
-  end
+   setthreadidentity(2)
+     local Detected, Kill = rawget(v, "Detected"), rawget(v, "Kill")
+
+     local hook1; hook1 = hookfunction(Detected, function(Action, Info, NoCrash)
+       return true
+     end)
+
+     if rawget(v, "Variables") and rawget(v, "Process") and typeof(Kill) == "function" then
+       local hook2; hook2 = hookfunction(Kill, function(info) end)
+   end 
+
+  local hook3; hook3 = hookfunction(getrenv().debug.info, newcclosure(function(...)
+      local lineorf = ...
+      if Detected and lineorf == Detected then
+        return coroutine.yield(coroutine.running())
+      end
+      return hook3(...)
+    end))
+  setthreadidentity(8)
+  end 
+end
   
 local BHU2 = Instance.new("ScreenGui", cloneref(gethui()))
 BHU2.DisplayOrder = math.huge
