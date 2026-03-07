@@ -1,7 +1,7 @@
-local BudgieHub = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
-BudgieHub:ToggleTransparency(false)
+local BudgieHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Resources/FluentCopy.lua"))()
 
 local BHUTitle = "Budgie Hub Universal 2 Alpha"
+local currentScript = getfenv(0).script
 
   local month, day = os.date("%B"), os.date("%d")
   if month == "February" and day == "14" then
@@ -33,8 +33,12 @@ local Window = BudgieHub:CreateWindow({
       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Adonis%20Bypass"))()
     end
   end
+  
+local BHU2 = Instance.new("ScreenGui", cloneref(gethui()))
+BHU2.DisplayOrder = math.huge
+BHU2.ResetOnSpawn = false
 
-local BHU2_Icon = Instance.new("ImageButton", BHU2 or Instance.new("ScreenGui", game.CoreGui))
+local BHU2_Icon = Instance.new("ImageButton", BHU2)
 BHU2_Icon.Size = UDim2.new(0, math.floor(math.max(32, math.min(game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY) * 0.15)), 0, math.floor(math.max(32, math.min(game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY) * 0.15)))
 BHU2_Icon.BackgroundColor3 = Color3.new(0.075, 0.075, 0.075)
 BHU2_Icon.Image = "rbxassetid://126371842393375"
@@ -44,7 +48,8 @@ BHU2_Icon.Draggable = true
 BHU2_Icon_Corner = Instance.new("UICorner", BHU2_Icon)
 BHU2_Icon_Corner.CornerRadius = UDim.new(0.2, 0)
 
-BHU2_Icon:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
+local conne = game:GetService("RunService").Heartbeat:Connect(function()
+ pcall(function()
   local SSx, SSy = game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY * 1.1
   local xval, yval = BHU2_Icon.AbsolutePosition.X, BHU2_Icon.AbsolutePosition.Y
   if (xval + BHU2_Icon.AbsoluteSize.X) >= SSx then
@@ -57,6 +62,7 @@ BHU2_Icon:GetPropertyChangedSignal("AbsolutePosition"):Connect(function()
   yval = (yval < 0 and 0) or yval
   
   BHU2_Icon.Position = UDim2.new(0, math.floor(xval), 0, math.floor(yval))
+ end) 
 end)
 
 BHU2_Icon.MouseButton1Click:Connect(function()
@@ -65,11 +71,18 @@ end)
 
 Window.Root.Parent.Destroying:Connect(function()
   BHU2_Icon:Destroy()
+  conne:Disconnect()
 end)
 
 getgenv().isnetworkowner = newcclosure(function(part: BasePart)
   return (part.ReceiveAge == 0 and gethiddenproperty(part, "NetworkIsSleeping") == false)
 end)
+
+coroutine.wrap(function()
+  if not isfolder("BHU2") then
+    makefolder("BHU2")
+  end
+end)()
 
 local Tabs = {
     Main = Window:AddTab({ Title = "Main", Icon = "rbxassetid://6523858394" }),
@@ -325,17 +338,24 @@ local PlayerControl = Tabs.Main:AddSection("Local Player Control")
 
 local Toggle = PlayerControl:AddToggle("MyToggle", {
     Title = "LocalPlayer: Fling", 
-    Description = "You can fling nearby players and objects if collisions are enabled. LocalPlayer, Fling",
+    Description = "You can fling nearby players and objects if collisions are enabled. Anti cheats can detect it. LocalPlayer, Fling",
     Default = false,
     Callback = function(state)
-     aae = state
-      while aae do
-  game:GetService("RunService").Heartbeat:Wait()
- local vel = game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity
-game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = vel * 100000 + Vector3.new(0, 100000, 0)
+     ajei = state
+     if ajei == false then return end
+for _, part in game:GetService("Players").LocalPlayer.Character:GetChildren() do
+  if part:IsA("BasePart") then
+    coroutine.wrap(function()
+      repeat
+   game:GetService("RunService").Heartbeat:Wait()
+  local vel = part.Velocity
+  part.Velocity = vel * 100000 + Vector3.new(0, 100000, 0)
   game:GetService("RunService").RenderStepped:Wait()
-   game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = vel
-  game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = vel + Vector3.new(0, 0, 0) 
+  part.Velocity = vel
+  part.Velocity = vel + Vector3.new(0, 0, 0) 
+      until ajei == false or not part
+    end)()
+  end
 end
     end 
 })
@@ -362,8 +382,8 @@ bv.P = math.huge
   for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
     if part:IsA("BasePart") then
       part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
-      part.AssemblyLinearVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 4000
-      part.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 4000
+      part.AssemblyLinearVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 10000
+      part.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 10000
     end
   end
 until bv.Parent == nil or game.Players.LocalPlayer.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Running
@@ -378,6 +398,19 @@ end)
   end
 })
 
+PlayerControl:AddToggle("Defense", {
+  Title = "LocalPlayer: Infinity jumps",
+  Description = "Jump as much as you want. LocalPlayer",
+  Default = false,
+  Callback = function(Value)
+     gigigi = Value
+     local con = game:GetService("UserInputService").JumpRequest:Connect(function()
+       game.Players.LocalPlayer.Character.Humanoid:ChangeState("Jumping")
+     end)
+     task.spawn(function() repeat task.wait() until gigigi == false con:Disconnect() end)
+  end
+})
+
 local Toggle = PlayerControl:AddToggle("MyToggle", {
     Title = "LocalPlayer: Anti fling", 
     Description = "This feature prevents you from touching players. LocalPlayer, Anti fling",
@@ -387,14 +420,14 @@ local Toggle = PlayerControl:AddToggle("MyToggle", {
      while aaf and task.wait() do
        for _, plr in next, game:GetService("Players"):GetPlayers() do
          if plr ~= game:GetService("Players").LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-for _, part in next, plr.Character:GetChildren() do
+for _, part in next, plr.Character:GetDescendants() do
   if part:IsA("BasePart") then
- part.CanCollide = not jhg
- part.CanTouch = not jhg
+ part.CanCollide = not aaf
+ part.CanTouch = not aaf
  part.AssemblyLinearVelocity = Vector3.zero
  part.AssemblyAngularVelocity = Vector3.zero
  part.Velocity = Vector3.zero
- part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0)
+ part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
   end
 end
          end
@@ -415,7 +448,7 @@ while aal and task.wait() do pcall(function() game.Players.LocalPlayer.Character
 
 local Toggle = PlayerControl:AddToggle("MyToggle", {
     Title = "LocalPlayer: Anti void", 
-    Description = "This feature prevents you from falling off the map by teleporting you to random spawn location",
+    Description = "This feature prevents you from falling off the map by teleporting you to random spawn location. LocalPlayer, Anti",
     Default = false,
     Callback = function(state)
       local function getrespawn(): Instance
@@ -503,17 +536,61 @@ game:GetService("RunService").Heartbeat:Wait()
 
 PlayerControl:AddToggle("Defense", {
   Title = "LocalPlayer: Async character",
-  Description = "To the client, you\'ll still be able to move freely, but to the server, you'll feel like you\'re standing still. LocalPlayer, Async",
+  Description = "To the client, you\'ll still be able to move freely, but to the server, you'll feel like you\'re you lag a lot. LocalPlayer, Async",
   Default = false,
   Callback = function(Value)
     nejb = Value
    while nejb and task.wait() do
-     local arm = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-     local jis = arm:FindFirstChildWhichIsA("JointInstance")
-     jis.Enabled = false
-     jis.Enabled = true
+  for _, joi in next, game.Players.LocalPlayer.Character:GetDescendants() do
+    if joi:IsA("JointInstance") then
+      joi.Enabled = false
+      joi.Enabled = true
     end
   end
+end
+  end
+})
+
+local PlayersControl = Tabs.Main:AddSection("Players Control")
+
+local function getplrbyname(name)
+  for _, plr in next, game.Players:GetPlayers() do
+    if string.find(plr.Name, name, 1, false) or string.find(plr.DisplayName, name, 1, false) then
+      return plr
+    end
+  end
+end
+
+local Input = PlayersControl:AddInput("Input", {
+    Title = "Players: Fling player",
+    Description = "You trying fling the player. Players",
+    Default = "",
+    Placeholder = "name",
+    Numeric = false,
+    Finished = true,
+    Callback = function(Value)
+        local player = getplrbyname(Value)
+if player and player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+  local cooldown, currentPos = os.clock(), game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+  repeat task.wait()
+    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = player.Character.HumanoidRootPart.CFrame
+    game.Players.LocalPlayer.Character.Humanoid:ChangeState("Jumping")
+    for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
+      if part:IsA("BasePart") then
+        part.AssemblyLinearVelocity = Vector3.new(10000, 10000, 10000)
+        part.AssemblyAngularVelocity = Vector3.new(10000, 10000, 10000)
+      end
+    end
+  until (os.clock() - cooldown) >= 5 or player.Character.HumanoidRootPart.Velocity.Magnitude >= 200 or not player or not player.Character or not player.Character:FindFirstChild("HumanoidRootPart")
+  game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = currentPos
+  for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
+    if part:IsA("BasePart") then
+      part.AssemblyLinearVelocity = Vector3.zero
+      part.AssemblyAngularVelocity = Vector3.zero
+    end
+  end
+end
+    end
 })
 
 local PartControl = Tabs.Main:AddSection("Parts Control")
@@ -612,6 +689,110 @@ end
   end
 })
 
+PartControl:AddButton({
+  Title = "Part: Get parts control tools",
+  Description = "Gives you tools to manipulate parts",
+  Callback = function()
+     local tool = Instance.new("Tool", game.Players.LocalPlayer.Backpack)
+tool.Name = "Black hole tool"
+tool.ToolTip = "Vacuuming all nearby parts to a given point"
+tool.RequiresHandle = false
+tool:SetAttribute("Pulling", false)
+
+tool.Activated:Connect(function()
+  game.Players.LocalPlayer.SimulationRadius = math.huge
+  tool:SetAttribute("Pulling", not tool:GetAttribute("Pulling"))
+  for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 250) do
+    if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) then
+      coroutine.wrap(function()
+      part.CanCollide = false
+      local bv = Instance.new("BodyPosition", part)
+      bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+      bv.D = 5
+      bv.Position = game.Players.LocalPlayer:GetMouse().Hit.Position
+      repeat task.wait() until tool:GetAttribute("Pulling") == false bv:Destroy()
+      part.CanCollide = true
+      part.Velocity = Vector3.zero
+      end)()
+    end
+  end
+end)
+
+local tool = Instance.new("Tool", game.Players.LocalPlayer.Backpack)
+tool.Name = "Reset parts tool"
+tool.ToolTip = "Resets all nearby parts"
+tool.RequiresHandle = false
+
+tool.Activated:Connect(function()
+  game.Players.LocalPlayer.SimulationRadius = math.huge
+  for _, part in next, game.Workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 100) do
+    if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) and isnetworkowner(part) then
+      for _, prop in next, game:GetService("ReflectionService"):GetPropertiesOfClass(part.ClassName) do
+        if not table.find({"CFrame", "Position", "Size", "Color", "ReceiveAge", "Anchored", "NetworkIsSleeping", "MeshId", "TextureID", "Parent"}, prop) then
+          pcall(function() part:ResetPropertyToDefault(prop.Name) end)
+        end
+      end
+      
+      for _, bv in next, part:GetDescendants() do
+        if bv:IsA("BodyMover") or bv:IsA("Constraint") then
+          bv:Destroy()
+         elseif bv:IsA("BaseScript") then
+          bv.Enabled = false
+        end
+      end
+    end
+  end
+end)
+
+local tool = Instance.new("Tool", game.Players.LocalPlayer.Backpack)
+tool.Name = "Void parts tool"
+tool.ToolTip = "Sends all nearby objects to the void"
+tool.RequiresHandle = false
+
+tool.Activated:Connect(function()
+  game.Players.LocalPlayer.SimulationRadius = math.huge
+  for _, part in next, game.Workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 150) do
+    if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) and isnetworkowner(part) then
+      part.CanCollide = false
+      local bodyg = Instance.new("BodyVelocity", part)
+      bodyg.Velocity = Vector3.new(0, workspace.FallenPartsDestroyHeight, 0) * 10
+      bodyg.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+      bodyg.P = math.huge
+    end
+  end
+end)
+
+local tool = Instance.new("Tool", game.Players.LocalPlayer.Backpack)
+tool.Name = "Parts freezer"
+tool.RequiresHandle = false
+tool.ToolTip = "Immobilizes all parts in the radius"
+tool.GripPos = Vector3.new(0, 0, 0)
+tool:SetAttribute("Activated", false)
+
+game.Players.LocalPlayer.SimulationRadius = math.huge
+tool.Activated:Connect(function()
+    tool:SetAttribute("Activated", not tool:GetAttribute("Activated"))
+    game.Players.LocalPlayer.SimulationRadius = math.huge
+    sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", math.huge)
+    settings().Physics.AllowSleep = false
+    game:GetService("TestService").IsSleepAllowed = false
+    
+    for _, part in next, game.Workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 300) do
+      if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and isnetworkowner(part) then
+        coroutine.wrap(function()
+          local bv = Instance.new("BodyVelocity", part)
+          bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+          bv.Velocity = Vector3.zero
+          bv.P = math.huge
+            repeat task.wait() until tool:GetAttribute("Activated") == false
+          bv:Destroy()
+        end)()
+      end
+   end
+end)
+  end
+})
+
 PartControl:AddToggle("MyToggle", {
   Title = "Part: Pull nearby objects towards nearby players",
   Description = "This function attracts nearby unattached objects to nearby players. Part, Players, Attract",
@@ -632,6 +813,7 @@ for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Ch
     for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 75) do
       if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) and not part:IsDescendantOf(humanoid.Parent) then
         game.Players.LocalPlayer.SimulationRadius = math.huge
+        if part.Anchored == true then continue end
         part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
         part.CanCollide = false
         part.AssemblyLinearVelocity = (humanoid.RootPart.Position - part.Position).Unit * 500
@@ -642,6 +824,10 @@ for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Ch
             bv:Destroy()
           end
         end
+        elseif part.Anchored == true and not part:IsDescendantOf(game.Players.LocalPlayer.Character) then
+         part.Velocity = Vector3.zero
+         part.AssemblyAngularVelocity = Vector3.zero
+         part.AssemblyLinearVelocity = Vector3.zero
       end
     end
   end
@@ -983,7 +1169,7 @@ CameraControl:AddToggle("MyToggle", {
   Description = "Your camera can pass through objects",
   Default = false,
   Callback = function(Value)
-    local CNE = Value
+    CNE = Value
 for i, v in next, getgc() do
     if getfenv(v).script == game.Players.LocalPlayer.PlayerScripts.PlayerModule.CameraModule.ZoomController.Popper and typeof(v) == "function" then
         for i2, v2 in next, debug.getconstants(v) do
@@ -1028,19 +1214,45 @@ LightControl:AddButton({
   end
 })
 
-LightControl:AddButton({
+LightControl:AddToggle("Toggle", {
   Title = "Light: Fullbright",
+  Default = false,
   Description = "Illuminates everything forever, but does not remove the lighting effects. Fullbright",
-  Callback = function()
-     game.Lighting.Changed:Connect(function()
-  game.Lighting.Ambient = Color3.new(1, 1, 1)
-  game.Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
-  game.Lighting.ColorShift_Top = Color3.new(1, 1, 1)
-  game.Lighting.GlobalShadows = false
-  game.Lighting.FogEnd = math.huge
-  game.Lighting.FogStart = math.huge
-end)
+  Callback = function(Value)
+   eihe = Value
+   if eihe == false then return end
+   local con = game.Lighting.Changed:Connect(function()
+     game.Lighting.Ambient = Color3.new(1, 1, 1)
+     game.Lighting.ColorShift_Bottom = Color3.new(1, 1, 1)
+     game.Lighting.ColorShift_Top = Color3.new(1, 1, 1)
+     game.Lighting.GlobalShadows = false
+     game.Lighting.FogEnd = math.huge
+     game.Lighting.FogStart = math.huge
+     game.Lighting.TimeOfDay = "12:34:43"
+     
+     for _, ligh in next, game.Lighting:GetDescendants() do
+       if ligh:IsA("PostEffect") then
+         ligh:Destroy()
+       end
+     end
+    end)
   game.Lighting.TimeOfDay = "12:34:43"
+  task.spawn(function() repeat task.wait() until eihe == false con:Disconnect() end)
+  end
+})
+
+local ProximityControl = Tabs.Main:AddSection("ProximityPrompt Control")
+
+ProximityControl:AddToggle("Defense", {
+  Title = "ProximityPrompt: Instant activation",
+  Description = "You instantly activate ProximityPrompt",
+  Default = false,
+  Callback = function(Value)
+    uueme = Value
+local con = game:GetService("ProximityPromptService").PromptButtonHoldBegan:Connect(function(promp)
+  fireproximityprompt(promp, 0)
+end)
+task.spawn(function() repeat task.wait() until uueme == false con:Disconnect() end)
   end
 })
 
@@ -1272,6 +1484,73 @@ HapticControl:AddToggle("MyToggle", {
   end
 })
 
+local ClientControl = Tabs.Main:AddSection("Client Control")
+
+local Dropdown = ClientControl:AddDropdown("Dropdown", {
+    Title = "Client: Set device orientation",
+    Description = "Sets the screen orientation of your device. Client",
+    Values = {"LandscapeLeft", "LandscapeRight", "LandscapeSensor", "Portrait", "Sensor"},
+    Multi = false,
+    Default = "",
+})
+
+Dropdown:OnChanged(function(Value)
+   if pcall(function() return Enum.ScreenOrientation[Value] end) then
+     game.Players.LocalPlayer.PlayerGui.ScreenOrientation = Enum.ScreenOrientation[Value]
+   end
+end)
+
+ClientControl:AddToggle("Defense", {
+  Title = "Client: Set premium",
+  Description = "Makes you look with premium, but visually. Client",
+  Default = false,
+  Callback = function(Value)
+     if Value == true then
+       sethiddenproperty(game.Players.LocalPlayer, "MembershipTypeReplicate", Enum.MembershipType.Premium)
+     else
+       sethiddenproperty(game.Players.LocalPlayer, "MembershipTypeReplicate", Enum.MembershipType.None)
+     end
+  end
+})
+
+local ClientAntiKickEnabled = false
+pcall(function()
+   local hook; hook = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
+    if ClientAntiKickEnabled then
+      if self == game.Players.LocalPlayer and table.find({"Kick", "Destroy", "Remove", "ClearAllChildren"}, getnamecallmethod()) then
+        return nil
+      elseif self == game.Players and table.find({"Destroy", "Remove", "ClearAllChildren", "ResetLocalPlayer"}, getnamecallmethod()) then
+        return nil
+      elseif self == game and table.find({"Shutdown"}, getnamecallmethod()) then
+        return nil
+      end
+    end
+    return hook(self, ...)
+  end))
+end)
+
+ClientControl:AddToggle("Defense", {
+  Title = "Client: Client anti kick",
+  Description = "Protects you from client-side kicks. It may not work if you don\'t have a hookmetamethod, getnamecallmethod and newcclosure",
+  Default = false,
+  Callback = function(Value)
+     ClientAntiKickEnabled = Value
+  end
+})
+
+ClientControl:AddToggle("Defense", {
+  Title = "Client: Disable controls",
+  Description = "All module scripts that control your character will be disabled. Client",
+  Default = false,
+  Callback = function(Value)
+     if Value == true then
+       require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule):GetControls():Disable()
+     else
+       require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule):GetControls():Enable()
+     end
+  end
+})
+
 local FFlagControl = Tabs.Main:AddSection("FFlags Control")
 FFlagControl:AddParagraph({
     Title = "",
@@ -1344,6 +1623,18 @@ local Input = FFlagControl:AddInput("Input", {
     end
 })
 
+local Input = FFlagControl:AddInput("Input", {
+    Title = "FFlag: DebugShowFlagState",
+    Description = "Shows the status of FFlag",
+    Default = "",
+    Placeholder = "FFlag name",
+    Numeric = false,
+    Finished = true, -- Only calls callback when you press enter
+    Callback = function(Value)
+        setfflag("DebugShowFlagState", tostring(Value))
+    end
+})
+
 game:GetService("Players").PlayerRemoving:Connect(function(plr)
   if plr == game.Players.LocalPlayer then
     setfflag("FontSizePadding", "1")
@@ -1352,6 +1643,7 @@ game:GetService("Players").PlayerRemoving:Connect(function(plr)
     setfflag("RaycastMaxDistance", "15000")
     setfflag("DebugDrawBroadPhaseAABBs", "false")
     setfflag("TaskSchedulerTargetFps", "0")
+    setfflag("DebugShowFlagState", "")
   end
 end)
 
@@ -1367,9 +1659,9 @@ Tabs.Finders:AddButton({
 
 Tabs.Finders:AddButton({
   Title = "Tool gun",
-  Description = "My special tool with special modes. 1 mod copies the full name of the object you clicked on, 2 displays in the console the value of all parameters of the object you clicked on, 3 mod gets all the descendants of the object you clicked on and there are other modes. You won't be able to click on an object if part.CanQuery = false",
+  Description = "My special tool with special modes. 1 mod copies the full name of the object you clicked on, 2 displays in the console the value of all parameters of the object you clicked on, 3 mod gets all the descendants of the object you clicked on and there are other modes",
   Callback = function()
-     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/Tool/refs/heads/main/Tool%20Gun"))()
+     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Tool_gun.luau"))()
   end
 })
 
@@ -1398,6 +1690,14 @@ Tabs.Finders:AddButton({
 })
 
 Tabs.Finders:AddButton({
+   Title = "Texture Provider",
+   Description = "Finding all textures in the game. This is my old script",
+   Callback = function()
+     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU/refs/heads/main/Special/TextureProvider"))()
+   end
+})
+
+Tabs.Finders:AddButton({
   Title = "Subplace finder",
   Description = "Gets all places (even hidden ones) from the creator of the current place. If you have a delta and the \"Verified teleports\" feature is enabled then you won\'t be able to teleport",
   Callback = function()
@@ -1411,6 +1711,84 @@ Tabs.Finders:AddButton({
   Callback = function()
     loadstring(game:HttpGet("https://raw.githubusercontent.com/Bebo-Mods/Scripts/refs/heads/master/HttpsSpy.lua"))()
   end
+})
+
+local Input = Tabs.Finders:AddInput("Input", {
+    Title = "Search scripts on scriptblox",
+    Description = "Shows you the scripts that were found in scriptblox by the given name",
+    Default = "",
+    Placeholder = "name",
+    Numeric = false,
+    Finished = true,
+    Callback = function(Value)
+        local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "Search result"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+
+local Frame = Instance.new("Frame", gui)
+Frame.Active = true
+Frame.Draggable = true
+Frame.BorderSizePixel = 0
+Frame.Size = UDim2.new(0, 250, 0, 250)
+Frame.BackgroundTransparency = 0.1
+Frame.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+Frame.Position = UDim2.new(0.35, 0, 0.2, 0)
+
+local Title = Instance.new("TextLabel", Frame)
+Title.Size = UDim2.new(0, 150, 0, 30)
+Title.Position = UDim2.new(0, 50, 0, -5)
+Title.Text = "Search result"
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundTransparency = 1
+
+local List = Instance.new("ScrollingFrame", Frame)
+List.Size = UDim2.new(0, 200, 0, 200)
+List.ScrollBarThickness = 5
+List.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+List.Position = UDim2.new(0, 23, 0, 21)
+List.BorderSizePixel = 0
+List.BackgroundTransparency = 0.1
+
+local Layout = Instance.new("UIGridLayout", List)
+Layout.SortOrder = Enum.SortOrder.LayoutOrder
+Layout.CellSize = UDim2.new(0, 200, 0, 20)
+Layout.CellPadding = UDim2.new(0, 5, 0, 5)
+
+Layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+  List.CanvasSize = UDim2.new(0, 0, 0, Layout.AbsoluteContentSize.Y)
+end)
+
+local Close = Instance.new("TextButton", Title)
+Close.Size = UDim2.new(0, 30, 0, 30)
+Close.Text = "X"
+Close.Position = UDim2.new(1, 0, 0, 0)
+Close.TextColor3 = Color3.new(1, 1, 1)
+Close.BackgroundTransparency = 1
+
+Close.MouseButton1Click:Connect(function()
+  gui:Destroy()
+end)
+
+local namescr = game:GetService("HttpService"):UrlEncode(Value)
+local scripts = game.HttpService:JSONDecode(game:HttpGet("https://scriptblox.com/api/script/search?q=" .. namescr)).result.scripts
+for i, scrip in next, scripts do
+  local Button = Instance.new("TextButton", List)
+  Button.Text = scrip.slug
+  Button.BackgroundColor3 = List.BackgroundColor3
+  Button.TextColor3 = Color3.new(1, 1, 1)
+  Button.TextScaled = true
+  Button.Position = UDim2.new(0.5, 0, 0.5, 0)
+  Button.AnchorPoint = Vector2.new(0.5, 0.5)
+  Button.TextXAlignment = Enum.TextXAlignment.Center
+  Button.Size = UDim2.new(0, 10, 0, 10)
+  Button.BorderSizePixel = 0
+  
+  Button.MouseButton1Click:Connect(function()
+    loadstring(scrip.script)()
+  end)
+end
+    end
 })
 
 local Section = Tabs.Finders:AddSection("Finders")
@@ -1436,6 +1814,18 @@ Tabs.Finders:AddButton({
   Description = "Gets information about this place",
   Callback = function()
     setclipboard(`Place Id: {game.PlaceId}\nGame Id: {game.GameId}\nCreator Id: {game.CreatorId}`)
+  end
+})
+
+Tabs.Finders:AddButton({
+  Title = "Copy self information",
+  Description = "Copies your information, such as client ID, HWID and more",
+  Callback = function()
+    local deviceId = game:GetService("DeviceIdService"):GetDeviceId()
+    local gitHash = gethiddenproperty(game:GetService("RunService"), "ClientGitHash")
+    local Useragent = game:GetService("HttpService"):GetUserAgent()
+    local IP = game:GetService("HttpService"):JSONDecode(request({Url = "https://httpbin.org/get", Method = "GET"}).Body).origin
+    setclipboard("Client ID: " .. tostring(game:GetService("RbxAnalyticsService"):GetClientId()) .. "\nHardware ID: " .. gethwid() .. "\nExploit name: " .. identifyexecutor() .. "\nDevice ID: " .. deviceId .. "\nClient git hash: " .. gitHash .. "\nUser Agent: " .. Useragent .. "\nYour IP: " .. tostring(IP))
   end
 })
 
@@ -1552,29 +1942,31 @@ Tabs.Finders:AddButton({
 
 local Section = Tabs.Extra:AddSection("Tools")
 
-Tabs.Extra:AddButton({
-  Title = "Rainbow coil",
-  Description = "My custom tool 1. Gives high speed and jump power + when landing does rainbow shockwave",
-  Callback = function()
-     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/NewTool/refs/heads/main/Auxiliary/Rainbow%20coil"))()
-  end
+local Dropdown = Tabs.Extra:AddDropdown("Dropdown", {
+    Title = "Custom tools",
+    Description = "My custom tools created by me",
+    Values = {"Rainbow Coil", "Jump Boots", "Particle Evaporator", "Energy Sphere", "Brazil Samba", "Part Morph", "Atomic Bomb"},
+    Multi = false,
+    Default = "",
 })
 
-Tabs.Extra:AddButton({
-  Title = "Jump boots",
-  Description = "My custom tool 2. Increases your jump power",
-  Callback = function()
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/NewTool/refs/heads/main/Auxiliary/Jump%20Boots"))()
-  end
-})
-
-Tabs.Extra:AddButton({
-  Title = "Particle Evaporator",
-  Description = "My custom tool 3. Shoots a beam that deals good damage",
-  Callback = function()
-      loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/NewTool/refs/heads/main/Range/Mythic/Particle%20Evaporator"))()
-  end
-})
+Dropdown:OnChanged(function(Value)
+    if Value == "Rainbow Coil" then
+      loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/NewTool/refs/heads/main/Auxiliary/Rainbow%20coil"))()
+     elseif Value == "Jump Boots" then
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/NewTool/refs/heads/main/Auxiliary/Jump%20Boots"))()
+     elseif Value == "Particle Evaporator" then
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/NewTool/refs/heads/main/Range/Mythic/Particle%20Evaporator"))()
+     elseif Value == "Energy Sphere" then
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Tool_Energy_Sphere.luau"))()
+     elseif Value == "Brazil Samba" then
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Brazil_Samba.luau"))()
+     elseif Value == "Part Morph" then
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Part_Morph.luau"))()
+     elseif Value == "Atomic Bomb" then
+       loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/Atomic_Bomb.luau"))()
+    end
+end)
 
 local Section = Tabs.Extra:AddSection("Special scripts")
 
@@ -1655,18 +2047,18 @@ Tabs.Settings:AddToggle("Defense", {
 })
 
 local queueonteleport = queueonteleport or queue_on_teleport
-getgenv().tac = false
+writefile("BHU2/ExecuteAgainAfterRejoining", "false")
 Tabs.Settings:AddToggle("MyToggle", {
   Title = "Execute after rejoining",
   Description = "When you rejoining or teleport to another place, the script executing again",
   Default = false,
   Callback = function(Value)
-     getgenv().tac = Value
+     writefile("BHU2/ExecuteAgainAfterRejoining", tostring(Value))
   end
 })
 
 queueonteleport([[
-  if tac == true then
+  if isfolder("BHU2") and isfile("BHU2/ExecuteAgainAfterRejoining") and readfile("BHU2/ExecuteAgainAfterRejoining") == "true" then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/BudgieHubUniversal2.lua"))()
   end
 ]])
@@ -1683,7 +2075,7 @@ Tabs.Creator:AddButton({
   Title = "Copy telegram link",
   Description = "Holy shit, that\'s me too. If you want to write me something, write here. I\'m there 24/7",
   Callback = function()
-    (setclipboard or toclipboard or setrbxclipboard or (syn and syn.write_clipboard))("https://t.me/ADSKerOfficial")
+    (setclipboard or toclipboard or setrbxclipboard or (syn and syn.write_clipboard))("https://t.me/Budgify")
   end
 })
 
