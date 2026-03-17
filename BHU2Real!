@@ -21,14 +21,13 @@ local currentScript = getfenv(0).script
 local Window = BudgieHub:CreateWindow({
     Title = "Budgie Hub Universal 2 Alpha",
     SubTitle = "by ADSKer",
-    TabWidth = 160, -- 160
+    TabWidth = 160,
     Size = UDim2.fromOffset(580, 460),
     Acrylic = false,
     Theme = "Darker",
     MinimizeKey = Enum.KeyCode.LeftControl
 })
 
--- Adonis Bypass
 for i, v in next, getgc(true) do
    if typeof(v) == "table" and rawget(v, "Detected") and typeof(rawget(v, "Detected")) == "function" then
    setthreadidentity(2)
@@ -49,12 +48,13 @@ for i, v in next, getgc(true) do
       end
       return hook3(...)
     end))
-  setthreadidentity(8)
   end 
 end
   
 local BHU2 = Instance.new("ScreenGui", cloneref(gethui()))
 BHU2.DisplayOrder = math.huge
+BHU2.ClipToDeviceSafeArea = false
+-- BHU2.ScreenInsets = Enum.ScreenInsets.None
 BHU2.ResetOnSpawn = false
 
 local BHU2_Icon = Instance.new("ImageButton", BHU2)
@@ -481,7 +481,7 @@ end
 aaj = state
 local char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
 
-while aaj and task.wait() do
+local con = workspace.CurrentCamera:GetPropertyChangedSignal("CFrame"):Connect(function()
 char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()
   if char:FindFirstChild("HumanoidRootPart") and char.HumanoidRootPart.CFrame.Y <= workspace.FallenPartsDestroyHeight + 10 then
     if getrespawn() then
@@ -492,8 +492,26 @@ char = game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterA
  char.HumanoidRootPart.Velocity = Vector3.zero
     end
   end
-end
+end)
+task.spawn(function() repeat task.wait() until aaj == false con:Disconnect() end)
     end 
+})
+
+PlayerControl:AddToggle("Defense", {
+  Title = "LocalPlayer: Noclip",
+  Description = "You can pass through walls and parts. Noclip, LocalPlayer",
+  Default = false,
+  Callback = function(Value)
+     toejh = Value
+local con = game:GetService("RunService").Heartbeat:Connect(function()
+  for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
+    if part:IsA("BasePart") then
+      part.CanCollide = not toejh
+    end
+  end
+end)
+    task.spawn(function() repeat task.wait() until toejh == false con:Disconnect() end)
+  end
 })
 
 PlayerControl:AddToggle("MyToggle", {
@@ -813,7 +831,7 @@ end)
 })
 
 PartControl:AddToggle("MyToggle", {
-  Title = "Part: Pull nearby objects towards nearby players",
+  Title = "Part: Pull nearby parts towards nearby players",
   Description = "This function attracts nearby unattached objects to nearby players. Part, Players, Attract",
   Default = false,
   Callback = function(Value)
@@ -822,6 +840,48 @@ yen = Value
   local humanoids = {}
 for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 50) do
     if part.Parent:IsA("Model") and part.Parent:FindFirstChildOfClass("Humanoid") and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and game.Players:GetPlayerFromCharacter(part.Parent) then
+      if not table.find(humanoids, part.Parent:FindFirstChildOfClass("Humanoid")) then
+        table.insert(humanoids, part.Parent:FindFirstChildOfClass("Humanoid"))
+      end
+    end
+  end
+
+  for _, humanoid in next, humanoids do
+    for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 75) do
+      if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) and not part:IsDescendantOf(humanoid.Parent) then
+        game.Players.LocalPlayer.SimulationRadius = math.huge
+        if part.Anchored == true then continue end
+        part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
+        part.CanCollide = false
+        part.AssemblyLinearVelocity = (humanoid.RootPart.Position - part.Position).Unit * 500
+        part.AssemblyAngularVelocity = Vector3.new(300, 300, 300)
+        
+        for _, bv in next, part:GetDescendants() do
+          if bv:IsA("BodyMover") or bv:IsA("Constraint") then
+            bv:Destroy()
+          end
+        end
+        elseif part.Anchored == true and not part:IsDescendantOf(game.Players.LocalPlayer.Character) then
+         part.Velocity = Vector3.zero
+         part.AssemblyAngularVelocity = Vector3.zero
+         part.AssemblyLinearVelocity = Vector3.zero
+      end
+    end
+  end
+end
+  end
+})
+
+PartControl:AddToggle("Defense", {
+  Title = "Part: Pull nearby parts towards nearby NPC\'s",
+  Description = "The function attracts all nearby parts to the nearest humanoid. Part, NPC, Attract",
+  Default = false,
+  Callback = function(Value)
+    yeen = Value
+    while yeen and task.wait() do
+  local humanoids = {}
+for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 50) do
+    if part.Parent:IsA("Model") and part.Parent:FindFirstChildOfClass("Humanoid") and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) then
       if not table.find(humanoids, part.Parent:FindFirstChildOfClass("Humanoid")) then
         table.insert(humanoids, part.Parent:FindFirstChildOfClass("Humanoid"))
       end
@@ -1564,8 +1624,10 @@ ClientControl:AddToggle("Defense", {
   Callback = function(Value)
      if Value == true then
        require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule):GetControls():Disable()
+       sethiddenproperty(game:GetService("GuiService"), "TouchControlsEnabled", false)
      else
        require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule):GetControls():Enable()
+       sethiddenproperty(game:GetService("GuiService"), "TouchControlsEnabled", true)
      end
   end
 })
@@ -1654,6 +1716,27 @@ local Input = FFlagControl:AddInput("Input", {
     end
 })
 
+FFlagControl:AddToggle("Defense", {
+  Title = "FFlag: DebugLightGridShowChunks",
+  Description = "This FFlag draws chunks like in Minecraft",
+  Default = false,
+  Callback = function(Value)
+     setfflag("DebugLightGridShowChunks", tostring(Value))
+  end
+})
+
+local Input = FFlagControl:AddInput("Input", {
+    Title = "FFlag: PhysicsSenderMaxBandwidthBps",
+    Description = "This FFlag controls the speed at which physics is sent. If you set it to 0, the player will be frozen for the server side",
+    Default = "",
+    Placeholder = "38760",
+    Numeric = true, -- Only allows numbers
+    Finished = true, -- Only calls callback when you press enter
+    Callback = function(Value)
+        setfflag("PhysicsSenderMaxBandwidthBps", tostring(Value))
+    end
+})
+
 game:GetService("Players").PlayerRemoving:Connect(function(plr)
   if plr == game.Players.LocalPlayer then
     setfflag("FontSizePadding", "1")
@@ -1663,6 +1746,8 @@ game:GetService("Players").PlayerRemoving:Connect(function(plr)
     setfflag("DebugDrawBroadPhaseAABBs", "false")
     setfflag("TaskSchedulerTargetFps", "0")
     setfflag("DebugShowFlagState", "")
+    setfflag("DebugLightGridShowChunks", "False")
+    setfflag("PhysicsSenderMaxBandwidthBps", "38760")
   end
 end)
 
@@ -2005,10 +2090,17 @@ Tabs.Extra:AddButton({
   end
 })
 
+Tabs.Extra:AddButton({
+  Title = "Morph in A60",
+  Description = "You become A60. Made by me",
+  Callback = function()
+     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Scripts/A60.luau"))()
+  end
+})
 
 
-local Input 
-Input = Tabs.Settings:AddInput("Input", {
+
+local Input = Tabs.Settings:AddInput("Input", {
     Title = "Set icon size",
     Description = "Sets the size of the icon (Multiplies the number by the original size) that turns the menu on or off",
     Default = "",
@@ -2124,3 +2216,10 @@ game.Players.PlayerAdded:Connect(function(player)
     })
   end
 end)
+
+--[[
+  Привет, пользователь моего скрипта. Я рад, что ты им пользуешься
+  Интернет для меня это вторая жизнь, где я получил успех. А в реальной жизни... ну... Я потерял всех. Банально из-за тупых причин. А кажется я знаю почему - я просто не пешка
+  Мой путь в 3 года изучения скриптов был не зря. Даже несмотря на окружающую среду: делал на телефоне, без помощи я смог стать скриптером. Сначала я создал свой первый хаб, но я понимал, что это говно. Потом постепенно начал делать ADSKer хабы, но это были просто сборником чужих скриптов. Потом я узнал о нейросетях, но сначала всё равно ничего не понимал. Потом постепенно начал всё запоминать и понимать и в итоге.
+  Я знаю, что тебе похуй на мои проблемы и мой путь, но просто знай это
+]]
