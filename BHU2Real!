@@ -48,11 +48,13 @@ for i, v in next, getgc(true) do
       end
       return hook3(...)
     end))
+   setthreadidentity(8)
   end 
 end
   
-local BHU2 = Instance.new("ScreenGui", cloneref(gethui()))
+local BHU2 = Instance.new("ScreenGui", cloneref(gethui and gethui() or game:GetService("CoreGui")))
 BHU2.DisplayOrder = math.huge
+BHU2.Name = "Budgie Hub 2"
 BHU2.ClipToDeviceSafeArea = false
 -- BHU2.ScreenInsets = Enum.ScreenInsets.None
 BHU2.ResetOnSpawn = false
@@ -67,8 +69,7 @@ BHU2_Icon.Draggable = true
 BHU2_Icon_Corner = Instance.new("UICorner", BHU2_Icon)
 BHU2_Icon_Corner.CornerRadius = UDim.new(0.2, 0)
 
-local conne = game:GetService("RunService").Heartbeat:Connect(function()
- pcall(function()
+local conne = game:GetService("RunService").RenderStepped:Connect(function()
   local SSx, SSy = game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY * 1.1
   local xval, yval = BHU2_Icon.AbsolutePosition.X, BHU2_Icon.AbsolutePosition.Y
   if (xval + BHU2_Icon.AbsoluteSize.X) >= SSx then
@@ -81,7 +82,6 @@ local conne = game:GetService("RunService").Heartbeat:Connect(function()
   yval = (yval < 0 and 0) or yval
   
   BHU2_Icon.Position = UDim2.new(0, math.floor(xval), 0, math.floor(yval))
- end) 
 end)
 
 BHU2_Icon.MouseButton1Click:Connect(function()
@@ -89,17 +89,31 @@ BHU2_Icon.MouseButton1Click:Connect(function()
 end)
 
 Window.Root.Parent.Destroying:Connect(function()
-  BHU2_Icon:Destroy()
+  BHU2:Destroy()
   conne:Disconnect()
 end)
 
-getgenv().isnetworkowner = newcclosure(function(part: BasePart)
-  return (part.ReceiveAge == 0 and gethiddenproperty(part, "NetworkIsSleeping") == false)
-end)
+do
+  getgenv().isnetworkowner = isnetworkowner or newcclosure(function(part: BasePart)
+    return (part.ReceiveAge == 0 and gethiddenproperty(part, "NetworkIsSleeping") == false)
+  end)
+  
+  getgenv().setsimulationradius = setsimulationradius or newcclosure(function(min, max)
+    sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", min)
+    sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", max)
+  end)
+end
 
 coroutine.wrap(function()
   if not isfolder("BHU2") then
     makefolder("BHU2")
+  end
+  
+  writefile("BHU2/Version", "1.0")
+  writefile("BHU2/Icon.jpg", game:HttpGetAsync("https://i.ibb.co/jPbnps2Q/IMG-20260310-143205-890.jpg"))
+  writefile("BHU2/Icon_AssetId", "rbxassetid://126371842393375")
+  if not isfile("BHU2/FeedbackCooldown") then
+    writefile("BHU2/FeedbackCooldown")
   end
 end)()
 
@@ -306,7 +320,7 @@ ToolControl:AddToggle("MyToggle", {
   Callback = function(Value)
      nsj = Value
 while nsj and task.wait() do
-  for _, tool in next, (game.Players.LocalPlayer.Character or game.Players.LocalPlayer.CharacterAdded:Wait()):GetChildren() do
+  for _, tool in next, game.Players.LocalPlayer.Character:GetChildren() do
     if tool:IsA("Tool") then
       for _, part in tool:GetDescendants() do
         if part:IsA("BasePart") then
@@ -332,18 +346,12 @@ local Toggle = TouchControl:AddToggle("TTIn", {
  while aad and task.wait() do
  if game.Workspace:FindFirstChild(game.Players.LocalPlayer.Name) and game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
   game.Players.LocalPlayer.SimulationRadius = math.huge
-  for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 40) do
-    if part:FindFirstChild("TouchInterest") then
+  for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 50) do
+    if part.Anchored == false and part:FindFirstChildWhichIsA("TouchTransmitter") then
       for _, player in next, game.Players:GetPlayers() do
-         if player ~= game.Players.LocalPlayer and workspace:FindFirstChild(player.Name) then
-           for _, parte in next, player.Character:GetChildren() do
-             if parte:IsA("BasePart") then
-               task.spawn(function()
-                 firetouchinterest(part, parte, 0)
-                 firetouchinterest(part, parte, 1)
-               end)
-             end
-           end
+         if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChildWhichIsA("BasePart") then
+           firetouchinterest(part, player.Character:FindFirstChildWhichIsA("BasePart"), 0)
+           firetouchinterest(part, player.Character:FindFirstChildWhichIsA("BasePart"), 1)
         end
       end
     end
@@ -362,19 +370,13 @@ local Toggle = PlayerControl:AddToggle("MyToggle", {
     Callback = function(state)
      ajei = state
      if ajei == false then return end
-for _, part in game:GetService("Players").LocalPlayer.Character:GetChildren() do
-  if part:IsA("BasePart") then
-    coroutine.wrap(function()
-      repeat
-   game:GetService("RunService").Heartbeat:Wait()
-  local vel = part.Velocity
-  part.Velocity = vel * 100000 + Vector3.new(0, 100000, 0)
+while ajei do
+  game:GetService("RunService").Heartbeat:Wait()
+ local vel = game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity
+game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = vel * 100000 + Vector3.new(0, 100000, 0)
   game:GetService("RunService").RenderStepped:Wait()
-  part.Velocity = vel
-  part.Velocity = vel + Vector3.new(0, 0, 0) 
-      until ajei == false or not part
-    end)()
-  end
+   game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = vel
+  game.Players.LocalPlayer.Character.HumanoidRootPart.Velocity = vel + Vector3.new(0, 0, 0) 
 end
     end 
 })
@@ -401,8 +403,8 @@ bv.P = math.huge
   for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
     if part:IsA("BasePart") then
       part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
-      part.AssemblyLinearVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 10000
-      part.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 10000
+      part.AssemblyLinearVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 25000
+      part.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 25000
     end
   end
 until bv.Parent == nil or game.Players.LocalPlayer.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Running
@@ -445,6 +447,7 @@ for _, part in next, plr.Character:GetDescendants() do
  part.CanTouch = not aaf
  part.AssemblyLinearVelocity = Vector3.zero
  part.AssemblyAngularVelocity = Vector3.zero
+ part.RotVelocity = Vector3.zero
  part.Velocity = Vector3.zero
  part.CustomPhysicalProperties = PhysicalProperties.new(0, 0, 0, 0, 0)
   end
@@ -503,7 +506,7 @@ PlayerControl:AddToggle("Defense", {
   Default = false,
   Callback = function(Value)
      toejh = Value
-local con = game:GetService("RunService").Heartbeat:Connect(function()
+local con = game:GetService("RunService").RenderStepped:Connect(function()
   for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
     if part:IsA("BasePart") then
       part.CanCollide = not toejh
@@ -526,6 +529,9 @@ PlayerControl:AddToggle("MyToggle", {
       humanoid:ChangeState("GettingUp")
       humanoid.PlatformStand = false
       humanoid.Parent:MakeJoints()
+      if humanoid:GetStateEnabled("FallingDown") then
+        humanoid:SetStateEnabled("FallingDown", false)
+      end
     end
   end
   end
@@ -674,6 +680,7 @@ local Toggle = PartControl:AddToggle("MyToggle", {
          for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character.HumanoidRootPart.Position, 50) do
            if part.Anchored == false and not isnetworkowner(part) and part.Velocity.Magnitude >= 5 and not game.Players:GetPlayerFromCharacter(part.Parent) then
               part.Velocity = Vector3.zero
+              part.RotVelocity = Vector3.zero
               part.AssemblyLinearVelocity = Vector3.zero
               part.AssemblyAngularVelocity = Vector3.zero
               part.CanCollide = isnetworkowner(part)
@@ -973,7 +980,7 @@ while myyy and task.wait() do
       if part.Anchored == false and not game.Players:GetPlayerFromCharacter(part.Parent) and part.Parent:FindFirstChildOfClass("Humanoid") then
        local humanoid = part.Parent:FindFirstChildOfClass("Humanoid")
         game.Players.LocalPlayer.SimulationRadius = math.huge
-        humanoid.RootPart.Velocity = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - humanoid.RootPart.Position).Unit * -200
+        humanoid.RootPart.AssemblyLinearVelocity = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position - humanoid.RootPart.Position).Unit * -300
       end
     end
   end
@@ -1076,6 +1083,8 @@ end
 })
 
 local AnimationControl = Tabs.Main:AddSection("Animation Control")
+
+-- Dropdown: Animation: Play animation R6
 
 local Dropdown = AnimationControl:AddDropdown("Dropdown", {
     Title = "Animation: Play animation R15",
@@ -1339,7 +1348,7 @@ local CoreControl = Tabs.Main:AddSection("Core Gui Control")
 
 CoreControl:AddButton({
   Title = "CoreGui: Enable Backpack",
-  Description = "",
+  Description = "Enables CoreGui Backpack",
   Callback = function(Value)
      game:GetService("StarterGui"):SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, true)
   end
@@ -1385,6 +1394,17 @@ CoreControl:AddButton({
   end
 })
 
+CoreControl:AddToggle("Toggle", {
+  Title = "CoreGui: Disable console",
+  Description = "This function disables dev console",
+  Default = false,
+  Callback = function(Value)
+    if game.CoreGui:FindFirstChild("DevConsoleMaster") then
+      game.CoreGui.DevConsoleMaster.Enabled = not Value
+    end
+  end
+})
+
 local SoundControl = Tabs.Main:AddSection("Sound Control")
 
 SoundControl:AddButton({
@@ -1406,11 +1426,31 @@ SoundControl:AddToggle("MyToggle", {
 
 local TeleportControl = Tabs.Main:AddSection("Place Teleport Control")
 
+local function makedialogue(callback)
+  local calb = Instance.new("BindableFunction")
+  calb.OnInvoke = function(action: string)
+    if action == "Yes" then
+      callback()
+    elseif action == "No" then
+      return 
+    end
+  end
+  
+  game:GetService("StarterGui"):SetCore("SendNotification", {
+    Title = "Budgie Hub",
+    Text = "Confirm teleportation?",
+    Duration = math.huge,
+    Button1 = "Yes",
+    Button2 = "No",
+    Callback = calb
+  })
+end
+
 TeleportControl:AddButton({
   Title = "Teleport: Rejoin",
   Description = "Teleports you to the server you are currently on",
   Callback = function()
-    game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer)
+    makedialogue(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, game.Players.LocalPlayer) end)
   end
 })
 
@@ -1418,7 +1458,7 @@ TeleportControl:AddButton({
   Title = "Teleport: Server hop",
   Description = "Teleports you to a random server",
   Callback = function()
-    game:GetService("TeleportService"):Teleport(game.PlaceId)
+    makedialogue(function() game:GetService("TeleportService"):Teleport(game.PlaceId) end)
   end
 })
 
@@ -1426,10 +1466,12 @@ TeleportControl:AddButton({
   Title = "Teleport: Smallest server",
   Description = "Teleports you to the server with the smallest population",
   Callback = function()
-    local servers = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
+   makedialogue(function()
+local servers = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Asc&limit=100")).data
   if #servers > 0 then
     game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, servers[1].id, game.Players.LocalPlayer)
   end
+  end)
   end
 })
 
@@ -1437,10 +1479,12 @@ TeleportControl:AddButton({
   Title = "Teleport: Biggest server",
   Description = "Teleports you to the server with the largest population",
   Callback = function()
-    local servers = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
+    makedialogue(function()
+   local servers = game.HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. game.PlaceId .. "/servers/Public?sortOrder=Desc&limit=100")).data
   if #servers > 0 then
     game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, servers[1].id, game.Players.LocalPlayer)
   end
+  end)
   end
 })
 
@@ -1540,16 +1584,52 @@ end
     end
 })
 
+CarControl:AddButton({
+  Title = "Vehicle: Annoying car",
+  Description = "Very quickly teleports your vehicle to all players until you stop sitting on her",
+  Callback = function()
+  local pos = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame
+    repeat task.wait()
+for _, seat in next, game.Players.LocalPlayer.Character.Humanoid.SeatPart.Parent:GetDescendants() do
+  if seat:IsA("Seat") and seat.Occupant == nil then
+    for _, plr in next, game.Players:GetPlayers() do
+      if plr ~= game.Players.LocalPlayer and plr.Character and plr.Character:FindFirstChildWhichIsA("BasePart") then
+        game.Players.LocalPlayer.SimulationRadius = math.huge
+        settings().Physics.AllowSleep = false
+        seat.CFrame = plr.Character:FindFirstChildWhichIsA("BasePart").CFrame
+        if seat:FindFirstChildWhichIsA("TouchTransmitter") then
+         firetouchinterest(seat, plr.Character:FindFirstChildWhichIsA("BasePart"), 0)
+         firetouchinterest(seat, plr.Character:FindFirstChildWhichIsA("BasePart"), 1)
+       end
+       task.wait()
+      end
+    end
+  end
+end
+until not game.Players.LocalPlayer.Character.Humanoid.SeatPart
+game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = pos
+
+    for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
+      if part:IsA("BasePart") then
+        part.AssemblyLinearVelocity = Vector3.zero
+        part.AssemblyAngularVelocity = Vector3.zero
+      end
+    end
+  end
+})
+
 local HapticControl = Tabs.Main:AddSection("Haptic Control")
 
 HapticControl:AddButton({
   Title = "Haptic: Vibrate",
-  Description = "A clear example of how haptic works",
+  Description = "A clear example of how haptic works. It only work if you have vibration motor",
   Callback = function()
      if game:GetService("HapticService"):IsMotorSupported(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large) then
       game:GetService("HapticService"):SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large, 0.2)
         task.wait(0.3)
       game:GetService("HapticService"):SetMotor(Enum.UserInputType.Gamepad1, Enum.VibrationMotor.Large, 0)
+     else
+       error("Your device don\'t have motor", 0)
     end
   end
 })
@@ -1593,6 +1673,7 @@ ClientControl:AddToggle("Defense", {
 })
 
 local ClientAntiKickEnabled = false
+local GamepassBypassEnabled = false
 pcall(function()
    local hook; hook = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
     if ClientAntiKickEnabled then
@@ -1602,6 +1683,10 @@ pcall(function()
         return nil
       elseif self == game and table.find({"Shutdown"}, getnamecallmethod()) then
         return nil
+      end
+    elseif GamepassBypassEnabled then
+      if not checkcaller() and (self == game.GetService(game, "MarketplaceService") and table.find({"UserOwnsGamePassAsync", "PlayerOwnsAssetAsync", "PlayerOwnsBundleAsync"}, getnamecallmethod())) or (self == game.GetService(game, "BadgeService") and table.find({"UserHasBadge"}, getnamecallmethod())) then
+        return true 
       end
     end
     return hook(self, ...)
@@ -1618,6 +1703,26 @@ ClientControl:AddToggle("Defense", {
 })
 
 ClientControl:AddToggle("Defense", {
+  Title = "Client: Gamepass bypass",
+  Description = "Makes you think client scripts that you own this gameplay, but the keyword is only for the client side, for server side you don't still own it",
+  Default = false,
+  Callback = function(togle)
+    GamepassBypassEnabled = togle
+  end
+})
+
+ClientControl:AddButton({
+  Title = "Client: Server-side reset",
+  Description = "You\'re doing a reset as if the server killed you. Client",
+  Callback = function()
+    if replicatesignal == nil then
+      error("Where is replicatesignal?", 0)
+    end
+    replicatesignal(game.Players.LocalPlayer.Kill)
+  end
+})
+
+ClientControl:AddToggle("Defense", {
   Title = "Client: Disable controls",
   Description = "All module scripts that control your character will be disabled. Client",
   Default = false,
@@ -1625,9 +1730,15 @@ ClientControl:AddToggle("Defense", {
      if Value == true then
        require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule):GetControls():Disable()
        sethiddenproperty(game:GetService("GuiService"), "TouchControlsEnabled", false)
+       if game.Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui") then
+         game.Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui").Enabled = false
+       end
      else
        require(game:GetService("Players").LocalPlayer.PlayerScripts.PlayerModule):GetControls():Enable()
        sethiddenproperty(game:GetService("GuiService"), "TouchControlsEnabled", true)
+       if game.Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui") then
+         game.Players.LocalPlayer.PlayerGui:FindFirstChild("TouchGui").Enabled = true
+       end
      end
   end
 })
@@ -1642,7 +1753,7 @@ local Input = FFlagControl:AddInput("Input", {
     Title = "FFlag: FontSizePadding",
     Description = "Changes the text size in the ENTIRE app and in the entire game. FFlag",
     Default = "1",
-    Placeholder = "Int",
+    Placeholder = "int",
     Numeric = true, 
     Finished = true, 
     Callback = function(Value)
@@ -1654,7 +1765,7 @@ local Input = FFlagControl:AddInput("Input", {
     Title = "FFlag: TouchSenderMaxBandwidthBps",
     Description = "Determines how quickly the event is fired part.Touched on your character. FFlag",
     Default = "12940",
-    Placeholder = "Int",
+    Placeholder = "int",
     Numeric = true,
     Finished = true,
     Callback = function(Value)
@@ -1675,7 +1786,7 @@ local Input = FFlagControl:AddInput("Input", {
     Title = "FFlag: RaycastMaxDistance",
     Description = "Sets a limit size for Ray.new including HipHeight of humanoids. FFlag",
     Default = "15000",
-    Placeholder = "Int",
+    Placeholder = "int",
     Numeric = true,
     Finished = true,
     Callback = function(Value)
@@ -1696,7 +1807,7 @@ local Input = FFlagControl:AddInput("Input", {
     Title = "FFlag: TaskSchedulerTargetFps",
     Description = "Sets a limit on FPS. 0 is the device\'s default. FFlag",
     Default = "0",
-    Placeholder = "Int",
+    Placeholder = "int",
     Numeric = true,
     Finished = true,
     Callback = function(Value)
@@ -1708,7 +1819,7 @@ local Input = FFlagControl:AddInput("Input", {
     Title = "FFlag: DebugShowFlagState",
     Description = "Shows the status of FFlag",
     Default = "",
-    Placeholder = "FFlag name",
+    Placeholder = "fflagName: string",
     Numeric = false,
     Finished = true, -- Only calls callback when you press enter
     Callback = function(Value)
@@ -1728,8 +1839,8 @@ FFlagControl:AddToggle("Defense", {
 local Input = FFlagControl:AddInput("Input", {
     Title = "FFlag: PhysicsSenderMaxBandwidthBps",
     Description = "This FFlag controls the speed at which physics is sent. If you set it to 0, the player will be frozen for the server side",
-    Default = "",
-    Placeholder = "38760",
+    Default = "38760",
+    Placeholder = "int",
     Numeric = true, -- Only allows numbers
     Finished = true, -- Only calls callback when you press enter
     Callback = function(Value)
@@ -1936,7 +2047,7 @@ Tabs.Finders:AddButton({
 local AntiConsoleBypass = false
 local suc, res = pcall(function()
   local hook; hook = hookmetamethod(game, "__namecall", newcclosure(function(self, ...)
-    if not checkcaller() and self == game.StarterGui and getnamecallmethod() == "SetCore" then
+    if not checkcaller() and self == game.StarterGui and (getnamecallmethod() == "SetCore" or getnamecallmethod() == "GetCore") then
       if AntiConsoleBypass == false then return hook(self, ...) end
       local args = {...}
       if #args > 0 and args[1] == "DevConsoleVisible" then
@@ -2168,11 +2279,61 @@ Tabs.Settings:AddToggle("MyToggle", {
   end
 })
 
+pcall(function()
 queueonteleport([[
   if isfolder("BHU2") and isfile("BHU2/ExecuteAgainAfterRejoining") and readfile("BHU2/ExecuteAgainAfterRejoining") == "true" then
     loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/BudgieHubUniversal2.lua"))()
   end
 ]])
+end)
+
+Tabs.Settings:AddInput("Input", {
+  Title = "Restore exploit function",
+  Description = "Restores the exploit function by name. To see the entire list of functions, then enter !list in textbox",
+  Default = "",
+  Placeholder = "isnetworkowner and etc",
+  Numeric = false,
+  Finished = true,
+  Callback = function(value)
+    if value ~= "!list" then
+    local str = (value:gsub(" ", ""):gsub("%c", "") .. ".luau"):gsub("^%s+", ""):gsub("%s+$", ""):gsub("%s+", " ")
+    
+    local suc, res = pcall(function()
+      return game:HttpGetAsync("https://raw.githubusercontent.com/ADSKerOffical/Budgify/refs/heads/main/Exploit/Functions/Source/" .. str)
+    end)
+    
+    if suc then
+      loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/ADSKerOffical/Budgify/refs/heads/main/Exploit/Functions/Source/" .. str))()
+      BudgieHub:Notify({
+         Title = "Budgie Hub",
+         Content = "Function " .. str:gsub(".luau", "") .. " has been restored",
+         SubContent = "",
+         Duration = 5
+       })
+    else
+      BudgieHub:Notify({
+        Title = "Budgie Hub",
+        Content = "Function " .. str:gsub(".luau", "") .. " do not exist or I did not make the source code",
+        SubContent = "",
+        Duration = 5
+      })
+    end
+    elseif value == "!list" then
+      local tabl = {}
+      for i, v in game:GetService("HttpService"):JSONDecode(game:HttpGet("https://api.github.com/repos/ADSKerOffical/Budgify/contents/Exploit/Functions/Source?ref=main")) do
+        local a = v.name:gsub(".luau", "")
+        table.insert(tabl, a)
+      end
+      
+      BudgieHub:Notify({
+        Title = "Budgie Hub",
+        Content = "List of all functions:",
+        SubContent = table.concat(tabl, ", "),
+        Duration = nil
+      })
+    end
+  end
+})
 
 Tabs.Creator:AddButton({
   Title = "Copy account link",
@@ -2206,20 +2367,114 @@ Tabs.Creator:AddButton({
   end
 })
 
-game.Players.PlayerAdded:Connect(function(player)
-  if player.UserId == 4636825706 then
-    Fluent:Notify({
-        Title = "Budgie Hub Notification",
-        Content = "You have met the creator",
-        SubContent = "Who do I see? Wait, it\'s an ADSKer!! Creator of Budgie Hub!!!!!!!! You\'re lucky to have met me",
+Tabs.Creator:AddButton({
+  Title = "Copy tiktok link",
+  Description = "My tiktok account. Maybe I\'ll share my knowledge and tutorials",
+  Callback = function()
+    (setclipboard or toclipboard or setrbxclipboard or (syn and syn.write_clipboard))("https://www.tiktok.com/@denis_grusin")
+  end
+})
+
+local anonymousMess = false
+Tabs.Creator:AddInput("jsj", {
+  Title = "Feedback",
+  Description = "You can send a message to my to offer me to make the functions for Budgie Hub Universal 2. I will write that idea suggested precisely you. But you can send a message once an hour and not too long",
+  Default = "",
+  Placeholder = "text",
+  Numberic = false,
+  Finished= true,
+  Callback = function(text)
+     if #readfile("BHU2/FeedbackCooldown") == 0 or (pcall(function() return tonumber(readfile("BHU2/FeedbackCooldown")) end) and tick() - tonumber(readfile("BHU2/FeedbackCooldown")) > 600) then
+     local message = text:gsub("%c", "")
+     local req = clonefunction(game:GetService("HttpService").RequestAsync)
+     local name = ""
+     
+     if anonymousMess == true then
+       name = "Anonymous"
+     else
+       name = tostring(rawget(game.Players.GetPlayers(game.Players), 1))
+     end
+     
+     assert(string.len(message) > 3, "Message is too small")
+     assert(string.len(message) <= 500, "Message is too big")
+     
+     req(game:GetService("HttpService"), {
+       Url = "https://discord.com/api/webhooks/1484504622663209042/t343Or-io-VtG-GfCAd57HSOMbnmDlrpJklknM_pA-NoCB8F8ga97G2AgzHp_TwArk1w",
+       Method = "POST",
+       Headers = {["Content-Type"] = "application/json", ["User-Agent"] = "http_request"},
+       Body =  [[{"content":"]] .. message .. [[","username":"Idea was sended from ]] .. name .. [["}]]
+     })
+     writefile("BHU2/FeedbackCooldown", tostring(tick()))
+     BudgieHub:Notify({
+       Title = "Budgie Hub",
+       Content = "Feedback was been sended",
+       SubContent = "",
+       Duration = 5
+     })
+     elseif #readfile("BHU2/FeedbackCooldown") ~= 0 and tick() - tonumber(readfile("BHU2/FeedbackCooldown")) < 600 then
+       error(`Don't forget that you can only send requests once an 10 minutes. You have {math.floor(600 - (tick() - tonumber(readfile("BHU2/FeedbackCooldown"))))} seconds left to wait`)
+    end
+  end
+})
+
+Tabs.Creator:AddToggle("Toggle", {
+  Title = "Anonymous message",
+  Description = "You can use this feature so I can't see who sent me the idea",
+  Default = false,
+  Callback = function(togle)
+    anonymousMess = togle
+  end
+})
+
+-- Meeting with me
+pcall(function()
+  BHU2:SetAttribute("MeetedWithOwner", false)
+  
+  game.Players.PlayerAdded:Connect(function(player)
+    if player.UserId == 4636825706 and BHU2:GetAttribute("MeetedWithOwner") == false then
+      BudgieHub:Notify({
+         Title = "Budgie Hub",
+         Content = `Who do I see? Wait, it\'s an ADSKer ({player.DisplayName})!! Creator of Budgie Hub!!!!!!!! You\'re lucky to have met me. I hope we will become friends`,
+         SubContent = "",
+         Duration = 15
+       })
+       BHU2:SetAttribute("MeetedWithOwner", true)
+    end
+  end)
+  
+  for _, player in next, game.Players:GetPlayers() do
+    if player.UserId == 4636825706 and game.Players.LocalPlayer.UserId ~= 4636825706 and BHU2:GetAttribute("MeetedWithOwner") == false then
+      BudgieHub:Notify({
+        Title = "Budgie Hub",
+        Content = `Who do I see? Wait, it\'s an ADSKer ({player.DisplayName})!! Create of Budgie Hub!!!!!!!! You\'re lucky to have met me. I hope we will become friends`,
+        SubContent = "",
         Duration = 15
-    })
+      })
+      BHU2:SetAttribute("MeetedWithOwner", true)
+    end
   end
 end)
 
+-- protect BHU2
+pcall(function()
+  local hook; hook = hookmetamethod(BHU2, "__namecall", newcclosure(function(self, ...)
+    if getfenv(0).script ~= currentScript and (self == BHU2 or self.IsDescendantOf(self, BHU2)) then
+      return nil
+    end
+    return hook(self, ...)
+  end))
+  
+  local hook; hook = hookmetamethod(BHU2, "__newindex", newcclosure(function(self, index, value)
+    if getfenv(0).script ~= currentScript and (self == BHU2 or self:IsDescendantOf(BHU2)) then
+      return nil
+    end
+    return hook(self, index, value)
+  end))
+end)
+
 --[[
-  Привет, пользователь моего скрипта. Я рад, что ты им пользуешься
-  Интернет для меня это вторая жизнь, где я получил успех. А в реальной жизни... ну... Я потерял всех. Банально из-за тупых причин. А кажется я знаю почему - я просто не пешка
-  Мой путь в 3 года изучения скриптов был не зря. Даже несмотря на окружающую среду: делал на телефоне, без помощи я смог стать скриптером. Сначала я создал свой первый хаб, но я понимал, что это говно. Потом постепенно начал делать ADSKer хабы, но это были просто сборником чужих скриптов. Потом я узнал о нейросетях, но сначала всё равно ничего не понимал. Потом постепенно начал всё запоминать и понимать и в итоге.
+  Привет, пользователь моего скрипта. Я рад, что ты им пользуешься и даже решил заглянуть в исходный код. Это я оставил специально всем тем, кто раздобыл исходный код. Ты довольно силен, раз смог узнать мой код.
+  Интернет для меня это вторая жизнь, где я получил успех. А в реальной жизни... ну... я потерял всех. Надеюсь, у тебя не будет того, что пережил я. 
+  Мой путь в 3 года изучения скриптов был не зря. Даже несмотря на окружающую среду: делал на телефоне, без помощи я смог стать скриптером. Сначала я создал свой первый хаб, но я понимал, что это говно. Потом постепенно начал делать ADSKer хабы, но это были просто сборником чужих скриптов. Потом я узнал о нейросетях, но сначала всё равно ничего не понимал. Потом постепенно начал всё запоминать и понимать.
   Я знаю, что тебе похуй на мои проблемы и мой путь, но просто знай это
 ]]
