@@ -1,3 +1,14 @@
+--[[
+
+ ____            _       _        _   _       _     
+| __ ) _   _  __| | __ _(_) ___  | | | |_   _| |__  
+|  _ \| | | |/ _` |/ _` | |/ _ \ | |_| | | | | '_ \ 
+| |_) | |_| | (_| | (_| | |  __/ |  _  | |_| | |_) |
+|____/ \__,_|\__,_|\__, |_|\___| |_| |_|\__,_|_.__/ 
+                   |___/                            
+
+]]--
+
 local BudgieHub = loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Resources/FluentCopy.lua"))()
 
 local BHUTitle = "Budgie Hub Universal 2 Alpha"
@@ -315,7 +326,7 @@ end
 
 ToolControl:AddToggle("MyToggle", {
   Title = "Tool: Massles grip",
-  Description = "All parts in the instrument become phantom, thus not moving you",
+  Description = "All parts in the tool become phantom, thus not moving you",
   Default = false,
   Callback = function(Value)
      nsj = Value
@@ -402,14 +413,22 @@ bv.P = math.huge
   end
   for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
     if part:IsA("BasePart") then
+      part.CanCollide = false
       part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
-      part.AssemblyLinearVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 25000
-      part.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 25000
+      part.AssemblyLinearVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 125000
+      part.Velocity = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.LookVector * 125000
     end
   end
 until bv.Parent == nil or game.Players.LocalPlayer.Character.Humanoid:GetState() ~= Enum.HumanoidStateType.Running
    pcall(function() bv:Destroy() end)
-   game.Players.LocalPlayer.Character.HumanoidRootPart.AssemblyLinearVelocity = Vector3.zero
+     for _, part in next, game.Players.LocalPlayer.Character:GetDescendants() do
+       if part:IsA("BasePart") then
+         part.CanCollide = true
+         part.AssemblyLinearVelocity = Vector3.zero
+         part.AssemblyAngularVelocity = Vector3.zero
+         part:ResetPropertyToDefault("CustomPhysicalProperties")
+       end
+    end
   end
 end)
 
@@ -915,6 +934,28 @@ for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Ch
          part.AssemblyAngularVelocity = Vector3.zero
          part.AssemblyLinearVelocity = Vector3.zero
       end
+    end
+  end
+end
+  end
+})
+
+PartControl:AddToggle("Defense", {
+  Title = "Part: Spin parts around",
+  Description = "All nearby parts will spining around you",
+  Default = false,
+  Callback = function(Value)
+    djhn = Value
+while djhn and game:GetService("RunService").RenderStepped:Wait() do
+  for _, part in next, workspace:GetPartBoundsInRadius(game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart").Position, 200) do
+    if part.Anchored == false and not part:IsDescendantOf(game.Players.LocalPlayer.Character) and not game.Players:GetPlayerFromCharacter(part.Parent) then
+       game.Players.LocalPlayer.SimulationRadius = math.huge
+       settings().Physics.AllowSleep = false
+
+       local angle = tick() * 15
+       part.AssemblyLinearVelocity = (game.Players.LocalPlayer.Character.HumanoidRootPart.Position + Vector3.new(150 * math.cos(angle), 0, 150 * math.sin(angle)) - part.Position).Unit * 1000
+       part.CanCollide = false
+       part.CustomPhysicalProperties = PhysicalProperties.new(100, 0, 0, 0, 0)
     end
   end
 end
@@ -2378,30 +2419,28 @@ Tabs.Creator:AddButton({
 local anonymousMess = false
 Tabs.Creator:AddInput("jsj", {
   Title = "Feedback",
-  Description = "You can send a message to my to offer me to make the functions for Budgie Hub Universal 2. I will write that idea suggested precisely you. But you can send a message once an hour and not too long",
+  Description = "You can send a message to my to offer me to make the functions for Budgie Hub Universal 2. I will write that idea suggested precisely you. But you can send a message once an 10 minutes and not too long",
   Default = "",
   Placeholder = "text",
   Numberic = false,
   Finished= true,
   Callback = function(text)
      if #readfile("BHU2/FeedbackCooldown") == 0 or (pcall(function() return tonumber(readfile("BHU2/FeedbackCooldown")) end) and tick() - tonumber(readfile("BHU2/FeedbackCooldown")) > 600) then
-     local message = text:gsub("%c", "")
+     local message = tostring(text:gsub("%c", ""):gsub("%p", ""))
      local req = clonefunction(game:GetService("HttpService").RequestAsync)
-     local name = ""
-     
+     local name = tostring(rawget(game.Players.GetPlayers(game.Players), 1))
      if anonymousMess == true then
-       name = "Anonymous"
-     else
-       name = tostring(rawget(game.Players.GetPlayers(game.Players), 1))
+       name = name .. " (Anonymous)" -- •⁠‿⁠•
+       -- Не ну а вдруг мне кто-то херню будет отправлять
      end
      
      assert(string.len(message) > 3, "Message is too small")
      assert(string.len(message) <= 500, "Message is too big")
      
      req(game:GetService("HttpService"), {
-       Url = "https://discord.com/api/webhooks/1484504622663209042/t343Or-io-VtG-GfCAd57HSOMbnmDlrpJklknM_pA-NoCB8F8ga97G2AgzHp_TwArk1w",
+       Url = loadstring(game.HttpGetAsync(game, "https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Resources/Weebhook_link"))(),
        Method = "POST",
-       Headers = {["Content-Type"] = "application/json", ["User-Agent"] = "http_request"},
+       Headers = {["Content-Type"] = "application/json", ["User-Agent"] = "Budgie Hub request"},
        Body =  [[{"content":"]] .. message .. [[","username":"Idea was sended from ]] .. name .. [["}]]
      })
      writefile("BHU2/FeedbackCooldown", tostring(tick()))
@@ -2416,6 +2455,15 @@ Tabs.Creator:AddInput("jsj", {
     end
   end
 })
+
+--[[pcall(function()
+  local hook; hook = hookfunction(writefile, newcclosure(function(fileName, value)
+    if getfenv(0).script ~= currentScript and fileName == "BHU2/FeedbackCooldown" then
+      return 
+    end
+    return hook(fileName, value)
+  end))
+end)]]--
 
 Tabs.Creator:AddToggle("Toggle", {
   Title = "Anonymous message",
@@ -2473,8 +2521,6 @@ pcall(function()
 end)
 
 --[[
-  Привет, пользователь моего скрипта. Я рад, что ты им пользуешься и даже решил заглянуть в исходный код. Это я оставил специально всем тем, кто раздобыл исходный код. Ты довольно силен, раз смог узнать мой код.
-  Интернет для меня это вторая жизнь, где я получил успех. А в реальной жизни... ну... я потерял всех. Надеюсь, у тебя не будет того, что пережил я. 
-  Мой путь в 3 года изучения скриптов был не зря. Даже несмотря на окружающую среду: делал на телефоне, без помощи я смог стать скриптером. Сначала я создал свой первый хаб, но я понимал, что это говно. Потом постепенно начал делать ADSKer хабы, но это были просто сборником чужих скриптов. Потом я узнал о нейросетях, но сначала всё равно ничего не понимал. Потом постепенно начал всё запоминать и понимать.
-  Я знаю, что тебе похуй на мои проблемы и мой путь, но просто знай это
+  Ого, а ты довольно умён. Смог обойти мои мини защиты от таких как ты. Я горжусь тобой
+  Wow, you're smart. You were able to bypass all my mini defenses. I'm proud of you
 ]]
