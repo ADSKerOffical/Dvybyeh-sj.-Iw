@@ -62,6 +62,24 @@ for i, v in next, getgc(true) do
    setthreadidentity(8)
   end 
 end
+
+task.spawn(function()
+  getgenv().BHU2 = {}
+  BHU2.Window = {}
+  BHU2.Settings = {}
+  BHU2.Exploit = {}
+  
+  function BHU2.Window:ToCenter()
+    Window.Root.AnchorPoint = Vector2.new(0.5, 0.5)
+    game:GetService("TweenService"):Create(Window.Root, TweenInfo.new(0.2, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out, 0, false, 0), {
+       Position = UDim2.new(0.5, 0, 0.5, 0)
+    }):Play()
+  end
+  
+  function BHU2.Window:Align()
+    Window.Root.Size = UDim2.new(0.7, 0, 1, 0)
+  end
+end)
   
 local BHU2 = Instance.new("ScreenGui", cloneref(gethui and gethui() or game:GetService("CoreGui")))
 BHU2.DisplayOrder = math.huge
@@ -69,6 +87,13 @@ BHU2.Name = "Budgie Hub 2"
 BHU2.ClipToDeviceSafeArea = false
 -- BHU2.ScreenInsets = Enum.ScreenInsets.None
 BHU2.ResetOnSpawn = false
+
+BHU2.Destroying:Connect(function()
+  if restorefunction or restorefunc then
+    (restorefunction or restorefunc)(rawget(getrawmetatable(game), "__namecall"))
+  end
+  pcall(function() getgenv().BHU2 = nil end)
+end)
 
 local BHU2_Icon = Instance.new("ImageButton", BHU2)
 BHU2_Icon.Size = UDim2.new(0, math.floor(math.max(32, math.min(game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY) * 0.15)), 0, math.floor(math.max(32, math.min(game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY) * 0.15)))
@@ -80,7 +105,7 @@ BHU2_Icon.Draggable = true
 BHU2_Icon_Corner = Instance.new("UICorner", BHU2_Icon)
 BHU2_Icon_Corner.CornerRadius = UDim.new(0.2, 0)
 
-local conne = game:GetService("RunService").RenderStepped:Connect(function()
+local conne = game:GetService("RunService").PreRender:Connect(function()
   local SSx, SSy = game.Players.LocalPlayer:GetMouse().ViewSizeX, game.Players.LocalPlayer:GetMouse().ViewSizeY * 1.1
   local xval, yval = BHU2_Icon.AbsolutePosition.X, BHU2_Icon.AbsolutePosition.Y
   if (xval + BHU2_Icon.AbsoluteSize.X) >= SSx then
@@ -105,13 +130,8 @@ Window.Root.Parent.Destroying:Connect(function()
 end)
 
 do
-  getgenv().isnetworkowner = isnetworkowner or newcclosure(function(part: BasePart)
-    return (part.ReceiveAge == 0 and gethiddenproperty(part, "NetworkIsSleeping") == false)
-  end)
+  task.spawn(function()
   
-  getgenv().setsimulationradius = setsimulationradius or newcclosure(function(min, max)
-    sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", min)
-    sethiddenproperty(game.Players.LocalPlayer, "MaxSimulationRadius", max)
   end)
 end
 
@@ -225,6 +245,42 @@ end]]--
          end
         Window:SelectTab(1)
        end
+     end)
+     
+     local buttons_config = Instance.new("Folder", ToolControl.Container.Parent.Parent.Parent.Parent)
+     
+     local ontop = Instance.new("TextButton", buttons_config)
+     ontop.Size = UDim2.new(0.075 / 2, 0, 0.1 / 2, 0)
+     ontop.Position = UDim2.new(0.425, 0, 0.125, 0)
+     ontop.Visible = false
+     ontop.BackgroundColor3 = Color3.new(0.15, 0.15, 0.15)
+     ontop.BackgroundTransparency = 0.2
+     ontop.Text = "↑"
+     ontop.TextColor3 = Color3.new(1, 1, 1)
+     ontop.Name = "ScrollToTop"
+     
+     local ondown = ontop:Clone()
+     ondown.Position = UDim2.new(0.485, 0, 0.125, 0)
+     ondown.Text = "↓"
+     ondown.Name = "ScrollToDown"
+     ondown.Parent = buttons_config
+     
+    local conta = ToolControl.Container.Parent.Parent
+     conta.Changed:Connect(function()
+       ontop.Visible = conta.Visible
+       ondown.Visible = conta.Visible
+     end)
+     
+     ontop.MouseButton1Click:Connect(function()
+       conta:ScrollToTop()
+     end)
+     
+     ondown.MouseButton1Click:Connect(function()
+       local target = Vector2.new(conta.CanvasPosition.X, math.max(0, conta.AbsoluteCanvasSize.Y - conta.AbsoluteSize.Y))
+
+game:GetService("TweenService"):Create(conta, TweenInfo.new(0.4, Enum.EasingStyle.Sine, Enum.EasingDirection.Out, 0, false, 0), {
+     CanvasPosition = target
+}):Play()
      end)
 
 local Toggle = ToolControl:AddToggle("ToolControl", {
@@ -361,8 +417,10 @@ local Toggle = TouchControl:AddToggle("TTIn", {
     if part.Anchored == false and part:FindFirstChildWhichIsA("TouchTransmitter") then
       for _, player in next, game.Players:GetPlayers() do
          if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChildWhichIsA("BasePart") then
+         pcall(function()
            firetouchinterest(part, player.Character:FindFirstChildWhichIsA("BasePart"), 0)
            firetouchinterest(part, player.Character:FindFirstChildWhichIsA("BasePart"), 1)
+         end)
         end
       end
     end
@@ -398,6 +456,7 @@ PlayerControl:AddToggle("MyToggle", {
   Default = false,
   Callback = function(Value)
    uue = Value
+   if uue == false then return end
    local coje = game.Players.LocalPlayer.Character.Humanoid.Running:Connect(function(speed)
   if speed > 0 and game.Players.LocalPlayer.Character.Humanoid.MoveDirection.Magnitude > 0 then
    local bv = Instance.new("BodyVelocity", game.Players.LocalPlayer.Character.HumanoidRootPart)
@@ -597,8 +656,8 @@ game:GetService("RunService").Heartbeat:Wait()
 })
 
 PlayerControl:AddToggle("Defense", {
-  Title = "LocalPlayer: Async character",
-  Description = "To the client, you\'ll still be able to move freely, but to the server, you'll feel like you\'re you lag a lot. LocalPlayer, Async",
+  Title = "LocalPlayer: Desync",
+  Description = "To the client, you\'ll still be able to move freely, but to the server, you'll feel like you\'re you lag a lot. LocalPlayer, desync",
   Default = false,
   Callback = function(Value)
     nejb = Value
@@ -2276,8 +2335,8 @@ local Toggle = Tabs.Settings:AddToggle("MyToggle", {
 })
 
 Tabs.Settings:AddToggle("MyToggle", {
-  Title = "Set alternative window size",
-  Description = "Aligns the window",
+  Title = "Align window",
+  Description = "Aligns the menu to the size of your screen",
   Default = false,
   Callback = function(Value)
     udhdb = Value
@@ -2286,6 +2345,15 @@ Tabs.Settings:AddToggle("MyToggle", {
      else
        Window.Root.Size = UDim2.fromOffset(580, 460)
      end
+  end
+})
+
+Tabs.Settings:AddToggle("Defense", {
+  Title = "Disable list configuration in main tab",
+  Description = "Disables all control buttons in the main tab (like \"↑\")",
+  Default = true,
+  Callback = function(Value)
+     buttons_config.Parent = (Value == true and game or Value == false and conta.Parent.Parent)
   end
 })
 
@@ -2426,9 +2494,9 @@ Tabs.Creator:AddInput("jsj", {
   Finished= true,
   Callback = function(text)
      if #readfile("BHU2/FeedbackCooldown") == 0 or (pcall(function() return tonumber(readfile("BHU2/FeedbackCooldown")) end) and tick() - tonumber(readfile("BHU2/FeedbackCooldown")) > 600) then
-     local message = tostring(text:gsub("%c", ""):gsub("%p", ""))
+     local message = tostring(text:gsub("%c", ""):gsub("%p", ""):gsub("\\", "/"))
      local req = clonefunction(game:GetService("HttpService").RequestAsync)
-     local name = tostring(rawget(game.Players.GetPlayers(game.Players), 1))
+     local name = game.GetService(game, "Players").GetNameFromUserIdAsync(game.Players, tonumber(string.match(game.Players.LocalPlayer.CharacterAppearance, "&userId=(%d+)")))
      if anonymousMess == true then
        name = name .. " (Anonymous)" -- •⁠‿⁠•
        -- Не ну а вдруг мне кто-то херню будет отправлять
@@ -2437,12 +2505,22 @@ Tabs.Creator:AddInput("jsj", {
      assert(string.len(message) > 3, "Message is too small")
      assert(string.len(message) <= 500, "Message is too big")
      
-     req(game:GetService("HttpService"), {
+     local response = req(game:GetService("HttpService"), {
        Url = loadstring(game.HttpGetAsync(game, "https://raw.githubusercontent.com/ADSKerOffical/BHU2Project/refs/heads/main/Resources/Weebhook_link"))(),
        Method = "POST",
        Headers = {["Content-Type"] = "application/json", ["User-Agent"] = "Budgie Hub request"},
-       Body =  [[{"content":"]] .. message .. [[","username":"Idea was sended from ]] .. name .. [["}]]
+       Body =  [[{"content":"]] .. message .. [[","username":"]] .. name .. [["}]]
      })
+     
+     if response.Success == false then
+       BudgieHub:Notify({
+         Title = "Budgie Hub",
+         Content = "Something went wrong and feedback doesn\'t sended. Body: " .. rawget(response, "Body"),
+         SubContent = "",
+         Duration = nil
+       })
+       return 
+     end
      writefile("BHU2/FeedbackCooldown", tostring(tick()))
      BudgieHub:Notify({
        Title = "Budgie Hub",
@@ -2521,6 +2599,6 @@ pcall(function()
 end)
 
 --[[
-  Ого, а ты довольно умён. Смог обойти мои мини защиты от таких как ты. Я горжусь тобой
-  Wow, you're smart. You were able to bypass all my mini defenses. I'm proud of you
+  Ого, а ты довольно умён. Ты смог обойти мои защиты. Я горжусь тобой
+  Wow, you're smart. You were able to bypass all my defenses. I'm proud of you
 ]]
